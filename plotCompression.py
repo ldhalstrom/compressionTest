@@ -15,6 +15,7 @@ no space between commas and next column.
 IMPROVMENTS:
 Normalize pressures by max value (for intratest comparison)
 Extend tests with less total strokes by repeating the last value
+Plot dry/wet deltas normalized by cylinder maximum or greatest maximum
 """
 
 import numpy as np
@@ -45,8 +46,10 @@ def ReadCompTestData(filename):
 
     #Read data, assign columnnames
     df = pd.read_csv(filename, sep=',', names=columnnames)
-    #remove whitespace from values
+    #Replace whitespace (blanks) with NaNs
     df = df.replace(r'\s+', np.nan, regex=True)
+    #Make all value float
+    df = df.apply(pd.to_numeric)
     return df
 
 
@@ -64,7 +67,7 @@ def PlotDryVsWet(df, savename, ylim=None):
     for i, (test, marker) in enumerate(zip(['dry', 'wet'], ['o', '.'])):
         for j, cyl in enumerate([1, 2, 3, 4]):
 
-            name = '{}{}'.format(cyl, test)
+            name = '{}{}'.format(cyl, test) #data key name
             # print(df['Stroke'][:len(df[name])]) #print strokes for each test
             h, = ax.plot(df['Stroke'].values, df[name].values,
                         label=name, color=colors[j],
@@ -77,7 +80,7 @@ def PlotDryVsWet(df, savename, ylim=None):
                 nhandles.append(h)
                 nlabels.append(str(cyl))
     ax.set_xlim([0, max(df['Stroke'])])
-    # plt.xticks(np.arange(0, max(df['Stroke'])+1, 1.0))
+    plt.xticks(np.arange(1, max(df['Stroke'])+1, 2.0))
     if ylim != None:
         ax.set_ylim(ylim)
 
@@ -89,11 +92,39 @@ def PlotDryVsWet(df, savename, ylim=None):
 
     SavePlot(savename)
 
+def PlotDryVsWetDelta(df, savename=None, ylim=None):
+    """For a single compression test, plot wet - dry delta.
+    """
+    _,ax = PlotStart(None, 'Engine Stroke',
+                            'Cylinder Pressure [psi]', figsize=[6, 6])
+
+
+    for j, cyl in enumerate([1, 2, 3, 4]):
+
+        name = '{}del'.format(cyl) #data key name
+        h, = ax.plot(df['Stroke'].values, df[name].values,
+                    label=name, color=colors[j],
+                    linestyle='-', marker='o', markersize=8
+                    )
+
+    ax.set_xlim([0, max(df['Stroke'])])
+    # plt.xticks(np.arange(0, max(df['Stroke'])+1, 1.0))
+    if ylim != None:
+        ax.set_ylim(ylim)
+
+    leg1 = PlotLegend(ax, loc='lower center', title='$\\delta P$')
+
+    return ax
+    # SavePlot(savename)
+
+
+
 def main():
     """Plot dry and wet tests of all cylinders together against stroke number
     """
 
     dfs = {}
+    keys = []
 
 
     ####################################################################
@@ -106,10 +137,11 @@ def main():
     #dry and wet test data
     # filename = 'Data/CompTest_2016-01-07_1st_1999Camry.dat'
     filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
-    dfs[1] = ReadCompTestData(filename)
-
-    savename = 'Results/CompTest1.png'
-    PlotDryVsWet(dfs[1], savename, [50, 275])
+    key = 1
+    keys.append(key)
+    dfs[key] = ReadCompTestData(filename)
+    savename = 'Results/CompTest{}.png'.format(key)
+    PlotDryVsWet(dfs[key], savename, [50, 275])
 
     ####################################################################
     #SECOND TEST
@@ -117,18 +149,21 @@ def main():
     # filename = 'Data/CompTest_2016-01-07_2nd_1999Camry.dat'
     filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
         #includes low value for first stroke pressure
-    dfs[2] = ReadCompTestData(filename)
-
-    savename = 'Results/CompTest2.png'
-    PlotDryVsWet(dfs[2], savename, [50, 275])
+    key = 2
+    keys.append(key)
+    dfs[key] = ReadCompTestData(filename)
+    savename = 'Results/CompTest{}.png'.format(key)
+    PlotDryVsWet(dfs[key], savename, [50, 275])
 
     ####################################################################
     #THIRD TEST
         #Cammy mk3, 2/11/2017, after Seafoam treatment
     filename = 'Data/CompTest_2016-02-11_1st_1999Camry.dat'
-    dfs[3] = ReadCompTestData(filename)
-    savename = 'Results/CompTest3.png'
-    PlotDryVsWet(dfs[3], savename, [50, 275])
+    key = 3
+    keys.append(key)
+    dfs[key] = ReadCompTestData(filename)
+    savename = 'Results/CompTest{}.png'.format(key)
+    PlotDryVsWet(dfs[key], savename, [50, 275])
 
 
 
@@ -137,9 +172,47 @@ def main():
     #COROLLA TEST
         #Grant's corrolla, 2/12/2017
     filename = 'Data/CompTest_2016-02-12_1st_1996Corolla.dat'
-    dfs['rolla'] = ReadCompTestData(filename)
-    savename = 'Results/CompTestRolla.png'
-    PlotDryVsWet(dfs['rolla'], savename, [50, 275])
+    key = 'rolla'
+    keys.append(key)
+    dfs[key] = ReadCompTestData(filename)
+    savename = 'Results/CompTest{}.png'.format(key)
+    PlotDryVsWet(dfs[key], savename, [50, 275])
+
+
+    ####################################################################
+    ### DELTAS ########################
+    ####################################################################
+
+
+
+    for k in keys:
+        print('\nTest: {}\n\n'.format(k))
+        for cyl in [1, 2, 3, 4]:
+            print('Cyl: {}'.format(cyl))
+            for test in ['dry', 'wet']:
+                #FILL MISSING STROKE DATA WITH LAST RECORDED VALUE
+                curkey = '{}{}'.format(cyl, test)
+                #Get last value (non-NaN)
+                lastval = dfs[k][curkey].dropna().iloc[-1]
+                #Replace NaN values with last value
+                dfs[k][curkey] = dfs[k][curkey].fillna(lastval)
+
+
+
+            print(dfs[k]['{}wet'.format(cyl)], dfs[k]['{}dry'.format(cyl)])
+            dfs[k]['{}del'.format(cyl)] = (dfs[k]['{}wet'.format(cyl)]
+                                         - dfs[k]['{}dry'.format(cyl)])
+
+            # dfs[k]['{}del'.format(cyl)] = df[k][['{}wet'.format(cyl)]].sub(df[k]['{}dry'.format(cyl)], axis=0)
+
+
+
+
+    ax = PlotDryVsWetDelta(dfs[3])
+    savename = 'Results/CompTest{}_delta.png'.format(key)
+    SavePlot(savename)
+
+
 
 
 
