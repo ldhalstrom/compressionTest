@@ -53,11 +53,18 @@ def ReadCompTestData(filename):
     return df
 
 
-def PlotDryVsWet(df, savename, ylim=None):
+def PlotDryVsWet(df, savename, ylim=None, norm=False):
     """For a single compression test, plot dry vs wet tests.
+    df --> pandas dataframe containing test data
+    savename --> file name to save plot as
+    ylim --> boundaries of y-axis ([ymin, ymax])
+    norm --> plot normalized values instead (must calculate beforehand)
     """
-    _,ax = PlotStart(None, 'Engine Stroke',
-                            'Cylinder Pressure [psi]', figsize=[6, 6])
+
+    ylbl = 'Cylinder Pressure [psi]'
+    if norm:
+        ylbl = 'Norm. Cyl. Pressure [N.D.]'
+    _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
 
     mhandles = [] #dry/wet
     mlabels = []
@@ -68,6 +75,10 @@ def PlotDryVsWet(df, savename, ylim=None):
         for j, cyl in enumerate([1, 2, 3, 4]):
 
             name = '{}{}'.format(cyl, test) #data key name
+            if norm:
+                #key for data normalized by its maximum
+                name = '{}norm'.format(name)
+
             # print(df['Stroke'][:len(df[name])]) #print strokes for each test
             h, = ax.plot(df['Stroke'].values, df[name].values,
                         label=name, color=colors[j],
@@ -92,18 +103,34 @@ def PlotDryVsWet(df, savename, ylim=None):
 
     SavePlot(savename)
 
-def PlotDryVsWetDelta(df, savename=None, ylim=None):
+def PlotDryVsWetDelta(df, ylim=None, norm=1):
     """For a single compression test, plot wet - dry delta.
+    df --> pandas dataframe containing test data
+    ylim --> boundaries of y-axis ([ymin, ymax])
+    norm --> normalization factor (1 for none, max dry values otherwise)
     """
-    _,ax = PlotStart(None, 'Engine Stroke',
-                            'Cylinder Pressure [psi]', figsize=[6, 6])
+
+
+
+    if max(norm) == 1:
+        norm = np.ones(4)
+        ylbl = 'Wet - Dry [psi]'
+        legtitle = '$\\Delta P$'
+    else:
+        ylbl = 'Norm. Wet - Dry'
+        legtitle = '$\\Delta P / P_{dry,max}$'
+
+
+
+
+    _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
 
 
     for j, cyl in enumerate([1, 2, 3, 4]):
 
         name = '{}del'.format(cyl) #data key name
-        h, = ax.plot(df['Stroke'].values, df[name].values,
-                    label=name, color=colors[j],
+        h, = ax.plot(df['Stroke'].values, df[name].values / norm[j],
+                    label=cyl, color=colors[j],
                     linestyle='-', marker='o', markersize=8
                     )
 
@@ -112,7 +139,7 @@ def PlotDryVsWetDelta(df, savename=None, ylim=None):
     if ylim != None:
         ax.set_ylim(ylim)
 
-    leg1 = PlotLegend(ax, loc='lower center', title='$\\Delta P$')
+    leg1 = PlotLegend(ax, loc='lower center', title=legtitle)
 
     return ax
     # SavePlot(savename)
@@ -184,17 +211,27 @@ def main():
     ####################################################################
 
     cyls = [1, 2, 3, 4]
+    tests = ['dry', 'wet']
 
-    #GET MAXIMA
+    #GET MAXIMA AND NORMALIZE
     maxima = {}
 
     for k in keys:
         maxs = { 'dry' : [], 'wet' : []}
         for cyl in cyls:
-            for test in ['dry', 'wet']:
+            for test in tests:
                 curkey = '{}{}'.format(cyl, test)
                 #Get Local Maximum for Each Cylinder
                 maxs[test].append(max( dfs[k][curkey] ))
+                #Normalize Current Cylinder by Maximum
+                dfs[k]['{}norm'.format(curkey)] = dfs[k][curkey] / maxs[test][-1]
+
+
+        savename = 'Results/CompTest{}_norm.png'.format(k)
+        PlotDryVsWet(dfs[k], savename, None, norm=True)
+
+
+
         #Save Maxima for current test
         maxima[k] = pd.DataFrame( {
                                     'cyl' : cyls,
@@ -203,17 +240,19 @@ def main():
                                 })
 
 
+    # #NORMALIZE EACH CYLINDER BY ITS MAXIMUM
+    # for k in keys:
+    #     for cyl in cyls:
+    #         for test in tests:
+    #             curkey = '{}{}'.format(cyl, test)
+    #             df[k]['{}norm'.format(curkey)] = df[k][curkey] / maxima[k][curkey]
+
 
     #CALCULATE WET-DRY DELTAS
 
     for k in keys:
-        print('\nTest: {}\n\n'.format(k))
-
-        cyls = [1, 2, 3, 4]
-
         for cyl in cyls:
-            print('Cyl: {}'.format(cyl))
-            for test in ['dry', 'wet']:
+            for test in tests:
                 #FILL MISSING STROKE DATA WITH LAST RECORDED VALUE
                 curkey = '{}{}'.format(cyl, test)
                 #Get last value (non-NaN)
@@ -225,13 +264,10 @@ def main():
             dfs[k]['{}del'.format(cyl)] = (dfs[k]['{}wet'.format(cyl)]
                                          - dfs[k]['{}dry'.format(cyl)])
 
-
-
-    key = 'rolla'
-    print(maxima[key])
-    ax = PlotDryVsWetDelta(dfs[key])
-    savename = 'Results/CompTest{}_delta.png'.format(key)
-    SavePlot(savename)
+        #PLOT DELTAS AS FRACTION OF MAX DRY PRESSURE FOR EACH CYLINDER
+        ax = PlotDryVsWetDelta(dfs[k], None, norm=maxima[k]['drymax'])
+        savename = 'Results/CompTest{}_delta_norm.png'.format(k)
+        SavePlot(savename)
 
 
 
