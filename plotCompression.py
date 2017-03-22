@@ -88,7 +88,7 @@ def main():
     """Plot dry and wet tests of all cylinders together against stroke number
     """
 
-
+    dfs = {}
 
 
     ####################################################################
@@ -101,30 +101,29 @@ def main():
     #dry and wet test data
     # filename = 'Data/CompTest_2016-01-07_1st_1999Camry.dat'
     filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
-    df = ReadCompTestData(filename)
-    # df = pd.read_csv(filename, sep=',', names=columnnames)
-    # df = df.replace(r'\s+', np.nan, regex=True) #remove whitespace from values
+    dfs[1] = ReadCompTestData(filename)
 
     savename = 'Results/CompTest1.png'
-    PlotDryVsWet(df, savename, [50, 275])
+    PlotDryVsWet(dfs[1], savename, [50, 275])
 
     ####################################################################
     #SECOND TEST
         #Cammy mk3, 1/7/2017
-    #dry and wet test data
     # filename = 'Data/CompTest_2016-01-07_2nd_1999Camry.dat'
     filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
-    df = ReadCompTestData(filename)
-    # df = pd.read_csv(filename, sep=',', names=columnnames)
-    # df = df.replace(r'\s+', np.nan, regex=True)
+        #includes low value for first stroke pressure
+    dfs[2] = ReadCompTestData(filename)
 
     savename = 'Results/CompTest2.png'
-    PlotDryVsWet(df, savename, [50, 275])
+    PlotDryVsWet(dfs[2], savename, [50, 275])
 
     ####################################################################
     #THIRD TEST
         #Cammy mk3, 2/11/2017, after Seafoam treatment
-
+    filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
+    dfs[3] = ReadCompTestData(filename)
+    savename = 'Results/CompTest2.png'
+    PlotDryVsWet(dfs[3], savename, [50, 275])
 
 
 
