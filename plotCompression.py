@@ -112,7 +112,7 @@ def PlotDryVsWetDelta(df, savename=None, ylim=None):
     if ylim != None:
         ax.set_ylim(ylim)
 
-    leg1 = PlotLegend(ax, loc='lower center', title='$\\delta P$')
+    leg1 = PlotLegend(ax, loc='lower center', title='$\\Delta P$')
 
     return ax
     # SavePlot(savename)
@@ -180,14 +180,38 @@ def main():
 
 
     ####################################################################
-    ### DELTAS ########################
+    ### DELTAS AND MAXIMA ########################
     ####################################################################
 
+    cyls = [1, 2, 3, 4]
 
+    #GET MAXIMA
+    maxima = {}
+
+    for k in keys:
+        maxs = { 'dry' : [], 'wet' : []}
+        for cyl in cyls:
+            for test in ['dry', 'wet']:
+                curkey = '{}{}'.format(cyl, test)
+                #Get Local Maximum for Each Cylinder
+                maxs[test].append(max( dfs[k][curkey] ))
+        #Save Maxima for current test
+        maxima[k] = pd.DataFrame( {
+                                    'cyl' : cyls,
+                                    'drymax' : maxs['dry'],
+                                    'wetmax' : maxs['wet']
+                                })
+
+
+
+    #CALCULATE WET-DRY DELTAS
 
     for k in keys:
         print('\nTest: {}\n\n'.format(k))
-        for cyl in [1, 2, 3, 4]:
+
+        cyls = [1, 2, 3, 4]
+
+        for cyl in cyls:
             print('Cyl: {}'.format(cyl))
             for test in ['dry', 'wet']:
                 #FILL MISSING STROKE DATA WITH LAST RECORDED VALUE
@@ -197,18 +221,15 @@ def main():
                 #Replace NaN values with last value
                 dfs[k][curkey] = dfs[k][curkey].fillna(lastval)
 
-
-
-            print(dfs[k]['{}wet'.format(cyl)], dfs[k]['{}dry'.format(cyl)])
+            #Subtract dry test pressure from wet test pressure
             dfs[k]['{}del'.format(cyl)] = (dfs[k]['{}wet'.format(cyl)]
                                          - dfs[k]['{}dry'.format(cyl)])
 
-            # dfs[k]['{}del'.format(cyl)] = df[k][['{}wet'.format(cyl)]].sub(df[k]['{}dry'.format(cyl)], axis=0)
 
 
-
-
-    ax = PlotDryVsWetDelta(dfs[3])
+    key = 'rolla'
+    print(maxima[key])
+    ax = PlotDryVsWetDelta(dfs[key])
     savename = 'Results/CompTest{}_delta.png'.format(key)
     SavePlot(savename)
 
