@@ -11,6 +11,10 @@ NOTE:
 Data files are made by pasting Google sheet columns into Sublime text,
 then using column editing to separate with commas to fixed width with
 no space between commas and next column.
+
+IMPROVMENTS:
+Normalize pressures by max value (for intratest comparison)
+Extend tests with less total strokes by repeating the last value
 """
 
 import numpy as np
@@ -33,6 +37,7 @@ markers = bigmarkers         #marker cycle
 
 def ReadCompTestData(filename):
     """Reads compression test data from csv file into pandas dataframe.
+    filename --> path to data file to read
     """
 
     columnnames = ['Stroke', '1dry', '2dry', '3dry', '4dry',
@@ -120,9 +125,9 @@ def main():
     ####################################################################
     #THIRD TEST
         #Cammy mk3, 2/11/2017, after Seafoam treatment
-    filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
+    filename = 'Data/CompTest_2016-02-11_1st_1999Camry.dat'
     dfs[3] = ReadCompTestData(filename)
-    savename = 'Results/CompTest2.png'
+    savename = 'Results/CompTest3.png'
     PlotDryVsWet(dfs[3], savename, [50, 275])
 
 
@@ -131,7 +136,10 @@ def main():
     ####################################################################
     #COROLLA TEST
         #Grant's corrolla, 2/12/2017
-
+    filename = 'Data/CompTest_2016-02-12_1st_1996Corolla.dat'
+    dfs['rolla'] = ReadCompTestData(filename)
+    savename = 'Results/CompTestRolla.png'
+    PlotDryVsWet(dfs['rolla'], savename, [50, 275])
 
 
 
