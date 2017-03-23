@@ -1,7 +1,7 @@
 """COMPRESSION TEST VISUALIZATION TOOL
 Logan Halstrom
 CREATED: 08 JAN 2017
-MODIFIY: 08 JAN 2017
+MODIFIY: 22 MAR 2017
 
 DESCRIPTION:  Visualize data for compression tests of internal combustion
 engines.  Compare pressure history of each cylinder as well as differences
@@ -9,13 +9,11 @@ between dry and wet (oil added to cylinder) tests.
 
 NOTE:
 Data files are made by pasting Google sheet columns into Sublime text,
-then using column editing to separate with commas to fixed width with
-no space between commas and next column.
+separating with columns, and trimming whitespace in numerical entries.
+NaNs are filled with whitespace that is later replaced by NaN in script.
 
-IMPROVMENTS:
-Normalize pressures by max value (for intratest comparison)
-Extend tests with less total strokes by repeating the last value
-Plot dry/wet deltas normalized by cylinder maximum or greatest maximum
+FUTURE IMPROVMENTS:
+Add threshold percentage value for deviation from max and print warning
 """
 
 import numpy as np
@@ -143,7 +141,6 @@ def PlotDryVsWetDelta(df, ylim=None, norm=1):
 
     return ax
     # SavePlot(savename)
-
 
 
 def main():
