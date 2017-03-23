@@ -135,7 +135,7 @@ def PlotDryVsWetDelta(df, ylim=None, norm=1):
                     )
 
     ax.set_xlim([0, max(df['Stroke'])])
-    # plt.xticks(np.arange(0, max(df['Stroke'])+1, 1.0))
+    plt.xticks(np.arange(1, max(df['Stroke'])+1, 2.0))
     if ylim != None:
         ax.set_ylim(ylim)
 
@@ -192,7 +192,7 @@ def main():
     savename = 'Results/CompTest{}.png'.format(key)
     PlotDryVsWet(dfs[key], savename, [50, 275])
 
-
+    print(dfs[key])
 
 
     ####################################################################
@@ -205,6 +205,7 @@ def main():
     savename = 'Results/CompTest{}.png'.format(key)
     PlotDryVsWet(dfs[key], savename, [50, 275])
 
+    print(dfs[key])
 
     ####################################################################
     ### DELTAS AND MAXIMA ########################
@@ -238,6 +239,15 @@ def main():
                                     'drymax' : maxs['dry'],
                                     'wetmax' : maxs['wet']
                                 })
+
+        #CALC FRACTIONAL DIFFERENCE FROM MAX CYLINDER
+            #lower pressure is worse.  Calc percent difference of lower
+            #max pressures from greatest max pressure.
+        maxcyl = max(maxima[k]['drymax'])
+        maxima[k]['diff'] = (maxima[k]['drymax'] - maxcyl) / maxcyl
+
+        print('Test {} % diff:'.format(k) )
+        print( maxima[k]['diff'] * 100 )
 
 
     # #NORMALIZE EACH CYLINDER BY ITS MAXIMUM
