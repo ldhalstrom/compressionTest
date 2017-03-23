@@ -43,7 +43,6 @@ def ReadCompTestData(filename):
 
     columnnames = ['Stroke', '1dry', '2dry', '3dry', '4dry',
                              '1wet', '2wet', '3wet', '4wet']
-
     #Read data, assign columnnames
     df = pd.read_csv(filename, sep=',', names=columnnames)
     #Replace whitespace (blanks) with NaNs
@@ -52,11 +51,9 @@ def ReadCompTestData(filename):
     df = df.apply(pd.to_numeric)
     return df
 
-
-def PlotDryVsWet(df, savename, ylim=None, norm=False):
-    """For a single compression test, plot dry vs wet tests.
+def PlotDryOnly(df, ylim=None, norm=False):
+    """For a single compression test, plot dry test pressure history only.
     df --> pandas dataframe containing test data
-    savename --> file name to save plot as
     ylim --> boundaries of y-axis ([ymin, ymax])
     norm --> plot normalized values instead (must calculate beforehand)
     """
@@ -65,63 +62,6 @@ def PlotDryVsWet(df, savename, ylim=None, norm=False):
     if norm:
         ylbl = 'Norm. Cyl. Pressure [N.D.]'
     _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
-
-    mhandles = [] #dry/wet
-    mlabels = []
-    nhandles = [] #cyl number
-    nlabels = []
-
-    for i, (test, marker) in enumerate(zip(['dry', 'wet'], ['o', '.'])):
-        for j, cyl in enumerate([1, 2, 3, 4]):
-
-            name = '{}{}'.format(cyl, test) #data key name
-            if norm:
-                #key for data normalized by its maximum
-                name = '{}norm'.format(name)
-
-            # print(df['Stroke'][:len(df[name])]) #print strokes for each test
-            h, = ax.plot(df['Stroke'].values, df[name].values,
-                        label=name, color=colors[j],
-                        linestyle='-', marker=marker, markersize=8
-                        )
-            if j == 0:
-                mhandles.append(h)
-                mlabels.append(str(test))
-            if i == 0:
-                nhandles.append(h)
-                nlabels.append(str(cyl))
-    ax.set_xlim([0, max(df['Stroke'])])
-    plt.xticks(np.arange(1, max(df['Stroke'])+1, 2.0))
-    if ylim != None:
-        ax.set_ylim(ylim)
-
-    leg1 = PlotLegendLabels(ax, mhandles, mlabels,
-                            loc='lower center', title='Test')
-    leg2 = PlotLegendLabels(ax, nhandles, nlabels,
-                            loc='lower right', title='Cyl')
-    plt.gca().add_artist(leg1)
-
-    SavePlot(savename)
-
-def PlotDryVsWetDelta(df, ylim=None, norm=1):
-    """For a single compression test, plot wet - dry delta.
-    df --> pandas dataframe containing test data
-    ylim --> boundaries of y-axis ([ymin, ymax])
-    norm --> normalization factor (1 for none, max dry values otherwise)
-    """
-
-
-
-    if max(norm) == 1:
-        norm = np.ones(4)
-        ylbl = 'Wet - Dry [psi]'
-        legtitle = '$\\Delta P$'
-    else:
-        ylbl = 'Norm. Wet - Dry'
-        legtitle = '$\\Delta P / P_{dry,max}$'
-
-
-
 
     _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
 
@@ -142,115 +82,188 @@ def PlotDryVsWetDelta(df, ylim=None, norm=1):
     leg1 = PlotLegend(ax, loc='lower center', title=legtitle)
 
     return ax
-    # SavePlot(savename)
 
 
-def main(path, name, ylim=None):
-    """Plot dry and wet tests of all cylinders together against stroke number
+def PlotDryVsWet(df, ylim=None, norm=False,
+                    tests=['dry', 'wet'], cyls=[1, 2, 3, 4] ):
+    """For a single compression test, plot dry vs wet tests.
+    df --> pandas dataframe containing test data
+    ylim --> boundaries of y-axis ([ymin, ymax])
+    norm --> plot normalized values instead (must calculate beforehand)
     """
 
-    ### LOAD TEST DATA
-    df = ReadCompTestData(path)
+    ylbl = 'Cylinder Pressure [psi]'
+    if norm:
+        ylbl = 'Norm. Cyl. Pressure [N.D.]'
+    _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
+
+    mhandles = [] #dry/wet
+    mlabels = []
+    nhandles = [] #cyl number
+    nlabels = []
+
+    for i, (test, marker) in enumerate(zip(tests, ['o', '.'])):
+        for j, cyl in enumerate(cyls):
+
+            name = '{}{}'.format(cyl, test) #data key name
+            if norm:
+                #key for data normalized by its maximum
+                name = '{}norm'.format(name)
+
+            h, = ax.plot(df['Stroke'].values, df[name].values,
+                        label=name, color=colors[j],
+                        linestyle='-', marker=marker, markersize=8
+                        )
+            if j == 0:
+                mhandles.append(h)
+                mlabels.append(str(test))
+            if i == 0:
+                nhandles.append(h)
+                nlabels.append(str(cyl))
+    ax.set_xlim([0, max(df['Stroke'])])
+    plt.xticks(np.arange(1, max(df['Stroke'])+1, 2.0))
+    if ylim != None:
+        ax.set_ylim(ylim)
+
+    #Cylinder Legend
+    leg1 = PlotLegendLabels(ax, nhandles, nlabels,
+                            loc='lower right', title='Cyl')
+    if len(tests) > 1:
+        #Test Type Legend
+        leg2 = PlotLegendLabels(ax, mhandles, mlabels,
+                                loc='lower center', title='Test')
+        plt.gca().add_artist(leg1)
+
+    return ax
+
+def PlotDryVsWetDelta(df, ylim=None, norm=1):
+    """For a single compression test, plot wet - dry delta.
+    df --> pandas dataframe containing test data
+    ylim --> boundaries of y-axis ([ymin, ymax])
+    norm --> normalization factor (1 for none, max dry values otherwise)
+    """
+
+    if max(norm) == 1:
+        #Non-normalized plot
+        norm = np.ones(4)
+        ylbl = 'Wet - Dry [psi]'
+        legtitle = '$\\Delta P$'
+    else:
+        #Normalize each delta by max pressure of that cylinder
+        ylbl = 'Norm. Wet - Dry'
+        legtitle = '$\\Delta P / P_{dry,max}$'
+
+    _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
+
+
+    for j, cyl in enumerate([1, 2, 3, 4]):
+
+        name = '{}del'.format(cyl) #data key name
+        h, = ax.plot(df['Stroke'].values, df[name].values / norm[j],
+                    label=cyl, color=colors[j],
+                    linestyle='-', marker='o', markersize=8
+                    )
+
+    ax.set_xlim([0, max(df['Stroke'])])
+    plt.xticks(np.arange(1, max(df['Stroke'])+1, 2.0))
+    if ylim != None:
+        ax.set_ylim(ylim)
+
+    leg1 = PlotLegend(ax, loc='lower center', title=legtitle)
+
+    return ax
+
+
+def main(path, name, ylim=None, thresh=15,
+            tests=['dry', 'wet'], ncyl=4):
+    """
+    Calculate maximum pressure of each cylinder in each test
+    Determine pressure variation between cylinders, evaluate with threshold
+    Plot cylinder pressure histories, raw and normalized
+    Co-plot dry and wet tests if data is available
+    Plot dry and wet test pressure differences if data is available
+
+    path --> path to data file
+    name --> name for current test
+    ylim --> y-axis plotting range (e.g. [ymin, ymax] or None)
+    thresh --> percentage threshold for poor cylinder performance
+                (assessed as negative in code)
+    tests --> types of tests performed ('dry' only or both 'dry' and 'wet')
+    ncyl  --> number of cylinders in engine
+    """
+
 
     ####################################################################
-    ### PLOT DRY VS WET RESULTS ########################################
+    ### LOAD TEST DATA #################################################
     ####################################################################
 
+    cyls = np.arange(1, ncyl+1, 1) #List of cylinder numbers
+    df = ReadCompTestData(path)    #Load compression test pressure data
+
+    ####################################################################
+    ### MAXIMA ANALYSIS ################################################
+    ####################################################################
+
+
+    #CALCULATE MAXIMA AND NORMALIZE PRESSURE
+    maxima = pd.DataFrame( {'cyl' : cyls})
+
+    for test in tests:
+        maxs = []
+        for cyl in cyls:
+            curkey = '{}{}'.format(cyl, test)
+            #Get Local Maximum for Each Cylinder
+            maxs.append(max( df[curkey] ))
+            #Normalize Current Cylinder by Maximum
+            df['{}norm'.format(curkey)] = df[curkey] / maxs[-1]
+
+        maxima['{}max'.format(test)] = maxs
+
+    #CALC FRACTIONAL DIFFERENCE FROM MAX CYLINDER (DRY TEST ONLY)
+        #lower pressure is worse.  Calc percent difference of lower
+        #max pressures from greatest max pressure.
+    maxcyl = max(maxima['drymax'])
+    maxima['diff'] = (maxima['drymax'] - maxcyl) / maxcyl #fractional diff
+    maxima['percdiff'] = maxima['diff'] * 100 #percent difference
+
+    #Print Differences
+    print('**********************************')
+    print('Compression Test {}, % difference:'.format(name) )
+    print( maxima[['cyl', 'percdiff']])
+    #Determine if any cylinders are outside of success threshold
+    failures = maxima[maxima['percdiff'] < -thresh]
+    if not failures.empty:
+        print('WARNING: FOLLOWING CYLINDERS ARE BELOW {}% OF MAXIMUM!!!'.format(thresh))
+        print( failures[['cyl', 'percdiff']])
+
+
+
+    ####################################################################
+    ### PLOT PRESSURE HISTORIES ########################################
+    ####################################################################
+
+    PlotDryVsWet(df, ylim, tests=tests, cyls=cyls)
     savename = 'Results/CompTest{}.png'.format(name)
-    PlotDryVsWet(df, savename, ylim)
+    SavePlot(savename)
 
-
-
-
-    # ####################################################################
-    # #FIRST TEST
-    #     #Cammy mk3, 1/7/2017
-    # #dry and wet test data
-    # # filename = 'Data/CompTest_2016-01-07_1st_1999Camry.dat'
-    # filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
-    # key = 1
-    # keys.append(key)
-    # df = ReadCompTestData(path)
-    # savename = 'Results/CompTest{}.png'.format(name)
-    # PlotDryVsWet(df, savename, ylim)
-
-    # ####################################################################
-    # #SECOND TEST
-    #     #Cammy mk3, 1/7/2017
-    # # filename = 'Data/CompTest_2016-01-07_2nd_1999Camry.dat'
-    # filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
-    #     #includes low value for first stroke pressure
-    # key = 2
-    # keys.append(key)
-    # dfs[key] = ReadCompTestData(filename)
-    # savename = 'Results/CompTest{}.png'.format(key)
-    # PlotDryVsWet(dfs[key], savename, [50, 275])
-
-    # ####################################################################
-    # #THIRD TEST
-    #     #Cammy mk3, 2/11/2017, after Seafoam treatment
-    # filename = 'Data/CompTest_2016-02-11_1st_1999Camry.dat'
-    # key = 3
-    # keys.append(key)
-    # dfs[key] = ReadCompTestData(filename)
-    # savename = 'Results/CompTest{}.png'.format(key)
-    # PlotDryVsWet(dfs[key], savename, [50, 275])
-
-    # print(dfs[key])
-
-
-    # ####################################################################
-    # #COROLLA TEST
-    #     #Grant's corrolla, 2/12/2017
-    # filename = 'Data/CompTest_2016-02-12_1st_1996Corolla.dat'
-    # key = 'rolla'
-    # keys.append(key)
-    # dfs[key] = ReadCompTestData(filename)
-    # savename = 'Results/CompTest{}.png'.format(key)
-    # PlotDryVsWet(dfs[key], savename, [50, 275])
-
-    # print(dfs[key])
 
     ####################################################################
     ### DELTAS AND MAXIMA ########################
     ####################################################################
 
-    cyls = [1, 2, 3, 4]
-    tests = ['dry', 'wet']
 
-    #GET MAXIMA AND NORMALIZE
 
-    maxs = { 'dry' : [], 'wet' : []}
-    for cyl in cyls:
-        for test in tests:
-            curkey = '{}{}'.format(cyl, test)
-            #Get Local Maximum for Each Cylinder
-            maxs[test].append(max( df[curkey] ))
-            #Normalize Current Cylinder by Maximum
-            df['{}norm'.format(curkey)] = df[curkey] / maxs[test][-1]
+
 
     #PLOT NORMALIZED DRY VS WET TESTS
+    PlotDryVsWet(df, None, norm=True, tests=tests, cyls=cyls)
     savename = 'Results/CompTest{}_norm.png'.format(name)
-    PlotDryVsWet(df, savename, None, norm=True)
+    SavePlot(savename)
 
 
 
-    #Save Maxima for current test
-    maxima = pd.DataFrame( {
-                                'cyl' : cyls,
-                                'drymax' : maxs['dry'],
-                                'wetmax' : maxs['wet']
-                            })
 
-    #CALC FRACTIONAL DIFFERENCE FROM MAX CYLINDER
-        #lower pressure is worse.  Calc percent difference of lower
-        #max pressures from greatest max pressure.
-    maxcyl = max(maxima['drymax'])
-    maxima['diff'] = (maxima['drymax'] - maxcyl) / maxcyl
 
-    #Print Differences
-    print('Test {} % diff:'.format(name) )
-    print( maxima['diff'] * 100 )
 
 
     #CALCULATE WET-DRY DELTAS
@@ -306,7 +319,7 @@ if __name__ == "__main__":
     filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
     key = 1
     #CALCULATIONS AND PLOTS FOR CURENT TEST
-    tmpdf = main(filename, key, ylimit, )
+    tmpdf = main(filename, key, ylimit, tests=['dry'])
     #Save Data
     dfs[key], maxima[key] = tmpdf
     keys.append(key)
