@@ -1,0 +1,151 @@
+<link href='http://fonts.googleapis.com/css?family=Fenix' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Alegreya+Sans:100,300,400,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:300,400' rel='stylesheet' type='text/css'>
+<style>
+
+/*@font-face {
+    font-family: "Computer Modern";
+    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunss.otf');
+}*/
+@font-face {
+    font-family: "Helvetica";
+}
+
+#notebook_panel { /* main background */
+    background: rgb(245,245,245);
+}
+
+div.cell { /* set cell width, text width is further down */
+    /*width: 750px;*/
+    width: 850px;
+}
+
+div #notebook { /* centre the content */
+    background: #fff; /* white background for content */
+    width: 1100px; /*make 10% more than cell width */
+    margin: auto;
+    padding-left: 0em;
+}
+
+#notebook li { /* More space between bullet points */
+margin-top:0.8em;
+}
+
+/* draw border around running cells */
+div.cell.border-box-sizing.code_cell.running {
+    border: 1px solid #111;
+}
+
+/* Put a solid color box around each cell and its output, visually linking them*/
+div.cell.code_cell {
+    background-color: rgb(256,256,256);
+    border-radius: 0px;
+    padding: 0.5em;
+    margin-left:1em;
+    margin-top: 1em;
+}
+
+
+div.text_cell_render{
+    font-family: 'Alegreya Sans' sans-serif;
+    line-height: 140%;
+    font-size: 125%;
+    font-weight: 400;
+    /*width:720px;*/
+    width:850px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+/* Formatting for header cells */
+.text_cell_render h1 {
+    /*font-family: 'Alegreya Sans', sans-serif;*/
+    font-family: 'Helvetica', sans-serif;
+    font-style:regular;
+    font-weight: 200;
+    font-size: 30pt;
+    line-height: 100%;
+    color:#395487;
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+    display: block;
+}
+.text_cell_render h2 {
+    font-family: 'Helvetica', serif;
+    font-size: 22pt;
+    line-height: 100%;
+    margin-bottom: 0.1em;
+    margin-top: 0.3em;
+    display: block;
+}
+
+.text_cell_render h3 {
+    font-family: 'Helvetica', serif;
+    margin-top:12px;
+    font-size: 16pt;
+    margin-bottom: 3px;
+    font-style: regular;
+}
+
+.text_cell_render h4 {    /*Use this for captions*/
+    font-family: 'Helvetica', serif;
+    font-size: 14pt;
+    font-style: italic;
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+    font-style: regular;
+}
+
+.text_cell_render h5 {  /*Use this for equation titles*/
+    font-family: 'Helvetica', sans-serif;
+    font-weight: 350;
+    font-size: 12pt;
+    /*color: #6495ED;*/
+    font-style: italic;
+    margin-bottom: .5em;
+    margin-top: 0.5em;
+    display: block;
+}
+
+.text_cell_render h6 { /*use this for equations*/
+    font-family: 'Helvetica', sans-serif;
+    font-weight: 300;
+    font-size: 14pt;
+    line-height: 100%;
+    text-align: center;
+    /*color: grey;*/
+    margin-bottom: 1px;
+    margin-top: 1px;
+}
+
+/*Code font styling*/
+.CodeMirror pre{
+            font-family: "Source Code Pro";
+            /*font-size: 90%;*/
+            font-size: 11pt;
+    }
+/*    .prompt{
+        display: None;
+    }*/
+
+
+    .warning{
+        color: rgb( 240, 20, 20 )
+        }
+</style>
+<script>
+    MathJax.Hub.Config({
+                        TeX: {
+                           extensions: ["AMSmath.js"],
+                           equationNumbers: { autoNumber: "AMS", useLabelIds: true}
+                           },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ]
+                },
+                displayAlign: 'center', // Change this to 'center' to center equations.
+                "HTML-CSS": {
+                    styles: {'.MathJax_Display': {"margin": 4}}
+                }
+        });
+</script>

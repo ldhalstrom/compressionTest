@@ -25,7 +25,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 sys.path.append('/Users/Logan/lib/python')
-from lutil import df2tex
 from lplot import *
 from seaborn import color_palette
 import seaborn as sns
