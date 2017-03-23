@@ -14,6 +14,8 @@ NaNs are filled with whitespace that is later replaced by NaN in script.
 
 FUTURE IMPROVMENTS:
 Add threshold percentage value for deviation from max and print warning
+dry only or dry and wet option
+
 """
 
 import numpy as np
@@ -143,66 +145,71 @@ def PlotDryVsWetDelta(df, ylim=None, norm=1):
     # SavePlot(savename)
 
 
-def main():
+def main(path, name, ylim=None):
     """Plot dry and wet tests of all cylinders together against stroke number
     """
 
-    dfs = {}
-    keys = []
-
-
-    ####################################################################
-    ### PLOT DRY VS WET RESULTS FOR EACH TEST ##########################
-    ####################################################################
+    ### LOAD TEST DATA
+    df = ReadCompTestData(path)
 
     ####################################################################
-    #FIRST TEST
-        #Cammy mk3, 1/7/2017
-    #dry and wet test data
-    # filename = 'Data/CompTest_2016-01-07_1st_1999Camry.dat'
-    filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
-    key = 1
-    keys.append(key)
-    dfs[key] = ReadCompTestData(filename)
-    savename = 'Results/CompTest{}.png'.format(key)
-    PlotDryVsWet(dfs[key], savename, [50, 275])
-
+    ### PLOT DRY VS WET RESULTS ########################################
     ####################################################################
-    #SECOND TEST
-        #Cammy mk3, 1/7/2017
-    # filename = 'Data/CompTest_2016-01-07_2nd_1999Camry.dat'
-    filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
-        #includes low value for first stroke pressure
-    key = 2
-    keys.append(key)
-    dfs[key] = ReadCompTestData(filename)
-    savename = 'Results/CompTest{}.png'.format(key)
-    PlotDryVsWet(dfs[key], savename, [50, 275])
 
-    ####################################################################
-    #THIRD TEST
-        #Cammy mk3, 2/11/2017, after Seafoam treatment
-    filename = 'Data/CompTest_2016-02-11_1st_1999Camry.dat'
-    key = 3
-    keys.append(key)
-    dfs[key] = ReadCompTestData(filename)
-    savename = 'Results/CompTest{}.png'.format(key)
-    PlotDryVsWet(dfs[key], savename, [50, 275])
-
-    print(dfs[key])
+    savename = 'Results/CompTest{}.png'.format(name)
+    PlotDryVsWet(df, savename, ylim)
 
 
-    ####################################################################
-    #COROLLA TEST
-        #Grant's corrolla, 2/12/2017
-    filename = 'Data/CompTest_2016-02-12_1st_1996Corolla.dat'
-    key = 'rolla'
-    keys.append(key)
-    dfs[key] = ReadCompTestData(filename)
-    savename = 'Results/CompTest{}.png'.format(key)
-    PlotDryVsWet(dfs[key], savename, [50, 275])
 
-    print(dfs[key])
+
+    # ####################################################################
+    # #FIRST TEST
+    #     #Cammy mk3, 1/7/2017
+    # #dry and wet test data
+    # # filename = 'Data/CompTest_2016-01-07_1st_1999Camry.dat'
+    # filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
+    # key = 1
+    # keys.append(key)
+    # df = ReadCompTestData(path)
+    # savename = 'Results/CompTest{}.png'.format(name)
+    # PlotDryVsWet(df, savename, ylim)
+
+    # ####################################################################
+    # #SECOND TEST
+    #     #Cammy mk3, 1/7/2017
+    # # filename = 'Data/CompTest_2016-01-07_2nd_1999Camry.dat'
+    # filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
+    #     #includes low value for first stroke pressure
+    # key = 2
+    # keys.append(key)
+    # dfs[key] = ReadCompTestData(filename)
+    # savename = 'Results/CompTest{}.png'.format(key)
+    # PlotDryVsWet(dfs[key], savename, [50, 275])
+
+    # ####################################################################
+    # #THIRD TEST
+    #     #Cammy mk3, 2/11/2017, after Seafoam treatment
+    # filename = 'Data/CompTest_2016-02-11_1st_1999Camry.dat'
+    # key = 3
+    # keys.append(key)
+    # dfs[key] = ReadCompTestData(filename)
+    # savename = 'Results/CompTest{}.png'.format(key)
+    # PlotDryVsWet(dfs[key], savename, [50, 275])
+
+    # print(dfs[key])
+
+
+    # ####################################################################
+    # #COROLLA TEST
+    #     #Grant's corrolla, 2/12/2017
+    # filename = 'Data/CompTest_2016-02-12_1st_1996Corolla.dat'
+    # key = 'rolla'
+    # keys.append(key)
+    # dfs[key] = ReadCompTestData(filename)
+    # savename = 'Results/CompTest{}.png'.format(key)
+    # PlotDryVsWet(dfs[key], savename, [50, 275])
+
+    # print(dfs[key])
 
     ####################################################################
     ### DELTAS AND MAXIMA ########################
@@ -212,84 +219,131 @@ def main():
     tests = ['dry', 'wet']
 
     #GET MAXIMA AND NORMALIZE
-    maxima = {}
 
-    for k in keys:
-        maxs = { 'dry' : [], 'wet' : []}
-        for cyl in cyls:
-            for test in tests:
-                curkey = '{}{}'.format(cyl, test)
-                #Get Local Maximum for Each Cylinder
-                maxs[test].append(max( dfs[k][curkey] ))
-                #Normalize Current Cylinder by Maximum
-                dfs[k]['{}norm'.format(curkey)] = dfs[k][curkey] / maxs[test][-1]
+    maxs = { 'dry' : [], 'wet' : []}
+    for cyl in cyls:
+        for test in tests:
+            curkey = '{}{}'.format(cyl, test)
+            #Get Local Maximum for Each Cylinder
+            maxs[test].append(max( df[curkey] ))
+            #Normalize Current Cylinder by Maximum
+            df['{}norm'.format(curkey)] = df[curkey] / maxs[test][-1]
 
-
-        savename = 'Results/CompTest{}_norm.png'.format(k)
-        PlotDryVsWet(dfs[k], savename, None, norm=True)
+    #PLOT NORMALIZED DRY VS WET TESTS
+    savename = 'Results/CompTest{}_norm.png'.format(name)
+    PlotDryVsWet(df, savename, None, norm=True)
 
 
 
-        #Save Maxima for current test
-        maxima[k] = pd.DataFrame( {
-                                    'cyl' : cyls,
-                                    'drymax' : maxs['dry'],
-                                    'wetmax' : maxs['wet']
-                                })
+    #Save Maxima for current test
+    maxima = pd.DataFrame( {
+                                'cyl' : cyls,
+                                'drymax' : maxs['dry'],
+                                'wetmax' : maxs['wet']
+                            })
 
-        #CALC FRACTIONAL DIFFERENCE FROM MAX CYLINDER
-            #lower pressure is worse.  Calc percent difference of lower
-            #max pressures from greatest max pressure.
-        maxcyl = max(maxima[k]['drymax'])
-        maxima[k]['diff'] = (maxima[k]['drymax'] - maxcyl) / maxcyl
+    #CALC FRACTIONAL DIFFERENCE FROM MAX CYLINDER
+        #lower pressure is worse.  Calc percent difference of lower
+        #max pressures from greatest max pressure.
+    maxcyl = max(maxima['drymax'])
+    maxima['diff'] = (maxima['drymax'] - maxcyl) / maxcyl
 
-        print('Test {} % diff:'.format(k) )
-        print( maxima[k]['diff'] * 100 )
-
-
-    # #NORMALIZE EACH CYLINDER BY ITS MAXIMUM
-    # for k in keys:
-    #     for cyl in cyls:
-    #         for test in tests:
-    #             curkey = '{}{}'.format(cyl, test)
-    #             df[k]['{}norm'.format(curkey)] = df[k][curkey] / maxima[k][curkey]
+    #Print Differences
+    print('Test {} % diff:'.format(name) )
+    print( maxima['diff'] * 100 )
 
 
     #CALCULATE WET-DRY DELTAS
+    for cyl in cyls:
+        for test in tests:
+            #FILL MISSING STROKE DATA WITH LAST RECORDED VALUE
+            curkey = '{}{}'.format(cyl, test)
+            #Get last value (non-NaN)
+            lastval = df[curkey].dropna().iloc[-1]
+            #Replace NaN values with last value
+            df[curkey] = df[curkey].fillna(lastval)
 
-    for k in keys:
-        for cyl in cyls:
-            for test in tests:
-                #FILL MISSING STROKE DATA WITH LAST RECORDED VALUE
-                curkey = '{}{}'.format(cyl, test)
-                #Get last value (non-NaN)
-                lastval = dfs[k][curkey].dropna().iloc[-1]
-                #Replace NaN values with last value
-                dfs[k][curkey] = dfs[k][curkey].fillna(lastval)
+        #Subtract dry test pressure from wet test pressure
+        df['{}del'.format(cyl)] = (df['{}wet'.format(cyl)]
+                                     - df['{}dry'.format(cyl)])
 
-            #Subtract dry test pressure from wet test pressure
-            dfs[k]['{}del'.format(cyl)] = (dfs[k]['{}wet'.format(cyl)]
-                                         - dfs[k]['{}dry'.format(cyl)])
-
-        #PLOT DELTAS AS FRACTION OF MAX DRY PRESSURE FOR EACH CYLINDER
-        ax = PlotDryVsWetDelta(dfs[k], None, norm=maxima[k]['drymax'])
-        savename = 'Results/CompTest{}_delta_norm.png'.format(k)
-        SavePlot(savename)
+    #PLOT DELTAS AS FRACTION OF MAX DRY PRESSURE FOR EACH CYLINDER
+    ax = PlotDryVsWetDelta(df, None, norm=maxima['drymax'])
+    savename = 'Results/CompTest{}_delta_norm.png'.format(name)
+    SavePlot(savename)
 
 
 
 
 
 
-    ####################################################################
-    ### COMPARE DIFFERENT TESTS OF SIMILAR TYPE ########################
-    ####################################################################
 
 
+
+
+    return df, maxima
 
 
 
 if __name__ == "__main__":
 
 
-    main()
+    ####################################################################
+    ### RUN MAIN FOR SEPARATE COMPRESSION TESTS ########################
+    ####################################################################
+
+    keys = []   #Key for each test
+    dfs = {}    #Store processed data for each test
+    maxima = {} #Store maxima of each test
+
+    ylimit = [50, 275] #Limits for plots
+
+    ####################################################################
+    #FIRST TEST
+        #Cammy mk3, 1/7/2017
+    #dry and wet test data
+    # filename = 'Data/CompTest_2016-01-07_1st_1999Camry.dat'
+    filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
+    key = 1
+    #CALCULATIONS AND PLOTS FOR CURENT TEST
+    tmpdf = main(filename, key, ylimit, )
+    #Save Data
+    dfs[key], maxima[key] = tmpdf
+    keys.append(key)
+
+    ####################################################################
+    #SECOND TEST
+        #Cammy mk3, 1/7/2017
+    # filename = 'Data/CompTest_2016-01-07_2nd_1999Camry.dat'
+    filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
+        #includes low value for first stroke pressure
+    key = 2
+    tmpdf = main(filename, key, ylimit, )
+    #Save Data
+    dfs[key], maxima[key] = tmpdf
+    keys.append(key)
+
+    ####################################################################
+    #THIRD TEST
+        #Cammy mk3, 2/11/2017, after Seafoam treatment
+    filename = 'Data/CompTest_2016-02-11_1st_1999Camry.dat'
+    key = 3
+    tmpdf = main(filename, key, ylimit, )
+    #Save Data
+    dfs[key], maxima[key] = tmpdf
+    keys.append(key)
+
+    ####################################################################
+    #COROLLA TEST
+        #Grant's corrolla, 2/12/2017
+    filename = 'Data/CompTest_2016-02-12_1st_1996Corolla.dat'
+    key = 'rolla'
+    tmpdf = main(filename, key, ylimit, )
+    #Save Data
+    dfs[key], maxima[key] = tmpdf
+    keys.append(key)
+
+
+
+
+
