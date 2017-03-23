@@ -137,7 +137,7 @@ def PlotDryVsWetDelta(df, ylim=None, norm=1):
     if ylim != None:
         ax.set_ylim(ylim)
 
-    leg1 = PlotLegend(ax, loc='lower center', title=legtitle)
+    leg1 = PlotLegend(ax, loc='lower right', title=legtitle)
 
     return ax
 
@@ -174,7 +174,7 @@ def main(path, name, ylim=None, thresh=15,
 
 
     #CALCULATE MAXIMA AND NORMALIZE PRESSURE
-    maxima = pd.DataFrame( {'cyl' : cyls})
+    maxima = pd.DataFrame( {'cyl' : cyls}) #storage for maxima
 
     for test in tests:
         maxs = []
@@ -185,7 +185,7 @@ def main(path, name, ylim=None, thresh=15,
             #Normalize Current Cylinder by Maximum
             df['{}norm'.format(curkey)] = df[curkey] / maxs[-1]
 
-        maxima['{}max'.format(test)] = maxs
+        maxima['{}max'.format(test)] = maxs #save maxima for current test type
 
     #CALC FRACTIONAL DIFFERENCE FROM MAX CYLINDER (DRY TEST ONLY)
         #lower pressure is worse.  Calc percent difference of lower
@@ -207,8 +207,6 @@ def main(path, name, ylim=None, thresh=15,
     else:
         print('ALL MAXIMUM CYLINDER PRESSURES ARE ' \
                 'WITHIN THRESHOLD (PASS)!!!')
-
-
 
     ####################################################################
     ### PLOT PRESSURE HISTORIES ########################################
