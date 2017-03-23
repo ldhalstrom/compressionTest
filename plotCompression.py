@@ -51,42 +51,11 @@ def ReadCompTestData(filename):
     df = df.apply(pd.to_numeric)
     return df
 
-def PlotDryOnly(df, ylim=None, norm=False):
-    """For a single compression test, plot dry test pressure history only.
-    df --> pandas dataframe containing test data
-    ylim --> boundaries of y-axis ([ymin, ymax])
-    norm --> plot normalized values instead (must calculate beforehand)
-    """
 
-    ylbl = 'Cylinder Pressure [psi]'
-    if norm:
-        ylbl = 'Norm. Cyl. Pressure [N.D.]'
-    _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
-
-    _,ax = PlotStart(None, 'Engine Stroke', ylbl, figsize=[6, 6])
-
-
-    for j, cyl in enumerate([1, 2, 3, 4]):
-
-        name = '{}del'.format(cyl) #data key name
-        h, = ax.plot(df['Stroke'].values, df[name].values / norm[j],
-                    label=cyl, color=colors[j],
-                    linestyle='-', marker='o', markersize=8
-                    )
-
-    ax.set_xlim([0, max(df['Stroke'])])
-    plt.xticks(np.arange(1, max(df['Stroke'])+1, 2.0))
-    if ylim != None:
-        ax.set_ylim(ylim)
-
-    leg1 = PlotLegend(ax, loc='lower center', title=legtitle)
-
-    return ax
-
-
-def PlotDryVsWet(df, ylim=None, norm=False,
+def PlotPressHist(df, ylim=None, norm=False,
                     tests=['dry', 'wet'], cyls=[1, 2, 3, 4] ):
-    """For a single compression test, plot dry vs wet tests.
+    """For a single compression test, plot cylinder pressure history.
+    Plot dry vs wet tests if data is available for both
     df --> pandas dataframe containing test data
     ylim --> boundaries of y-axis ([ymin, ymax])
     norm --> plot normalized values instead (must calculate beforehand)
@@ -227,14 +196,18 @@ def main(path, name, ylim=None, thresh=15,
     maxima['percdiff'] = maxima['diff'] * 100 #percent difference
 
     #Print Differences
-    print('**********************************')
+    print('\n**********************************')
     print('Compression Test {}, % difference:'.format(name) )
     print( maxima[['cyl', 'percdiff']])
     #Determine if any cylinders are outside of success threshold
     failures = maxima[maxima['percdiff'] < -thresh]
     if not failures.empty:
-        print('WARNING: FOLLOWING CYLINDERS ARE BELOW {}% OF MAXIMUM!!!'.format(thresh))
+        print('WARNING: FOLLOWING CYLINDERS ARE ' \
+                'BELOW {}% OF MAXIMUM (FAIL)!!!'.format(thresh))
         print( failures[['cyl', 'percdiff']])
+    else:
+        print('ALL MAXIMUM CYLINDER PRESSURES ARE ' \
+                'WITHIN THRESHOLD (PASS)!!!')
 
 
 
@@ -242,31 +215,21 @@ def main(path, name, ylim=None, thresh=15,
     ### PLOT PRESSURE HISTORIES ########################################
     ####################################################################
 
-    PlotDryVsWet(df, ylim, tests=tests, cyls=cyls)
+    #PLOT COMPRESSION TEST PRESSURE HISTORIES (DRY VS WET IF AVAILABLE)
+    PlotPressHist(df, ylim, tests=tests, cyls=cyls)
     savename = 'Results/CompTest{}.png'.format(name)
     SavePlot(savename)
 
-
-    ####################################################################
-    ### DELTAS AND MAXIMA ########################
-    ####################################################################
-
-
-
-
-
-    #PLOT NORMALIZED DRY VS WET TESTS
-    PlotDryVsWet(df, None, norm=True, tests=tests, cyls=cyls)
+    #PLOT NORMALIZED PRESSURE HISTORIES (DRY VS WET IF AVAILABLE)
+    PlotPressHist(df, None, norm=True, tests=tests, cyls=cyls)
     savename = 'Results/CompTest{}_norm.png'.format(name)
     SavePlot(savename)
 
+    ####################################################################
+    ### WET-DRY DELTAS #################################################
+    ####################################################################
 
-
-
-
-
-
-    #CALCULATE WET-DRY DELTAS
+    #CALCULATE DIFFERENCE BETWEEN WET AND DRY TESTS
     for cyl in cyls:
         for test in tests:
             #FILL MISSING STROKE DATA WITH LAST RECORDED VALUE
@@ -276,7 +239,7 @@ def main(path, name, ylim=None, thresh=15,
             #Replace NaN values with last value
             df[curkey] = df[curkey].fillna(lastval)
 
-        #Subtract dry test pressure from wet test pressure
+        #SUBTRACT DRY TEST PRESSURE FROM WET TEST PRESSURE
         df['{}del'.format(cyl)] = (df['{}wet'.format(cyl)]
                                      - df['{}dry'.format(cyl)])
 
@@ -284,13 +247,6 @@ def main(path, name, ylim=None, thresh=15,
     ax = PlotDryVsWetDelta(df, None, norm=maxima['drymax'])
     savename = 'Results/CompTest{}_delta_norm.png'.format(name)
     SavePlot(savename)
-
-
-
-
-
-
-
 
 
 
@@ -319,7 +275,7 @@ if __name__ == "__main__":
     filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
     key = 1
     #CALCULATIONS AND PLOTS FOR CURENT TEST
-    tmpdf = main(filename, key, ylimit, tests=['dry'])
+    tmpdf = main(filename, key, ylimit)
     #Save Data
     dfs[key], maxima[key] = tmpdf
     keys.append(key)
