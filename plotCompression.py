@@ -268,8 +268,8 @@ if __name__ == "__main__":
     #FIRST TEST
         #Cammy mk3, 1/7/2017
     #dry and wet test data
-    # filename = 'Data/CompTest_2016-01-07_1st_1999Camry.dat'
-    filename = 'Data/CompTest_2016-01-07_1st_Retest2_1999Camry.dat'
+    # filename = 'Data/CompTest_2017-01-07_1st_1999Camry.dat'
+    filename = 'Data/CompTest_2017-01-07_1st_Retest2_1999Camry.dat'
     key = 1
     #CALCULATIONS AND PLOTS FOR CURENT TEST
     tmpdf = main(filename, key, ylimit)
@@ -280,8 +280,8 @@ if __name__ == "__main__":
     ####################################################################
     #SECOND TEST
         #Cammy mk3, 1/7/2017
-    # filename = 'Data/CompTest_2016-01-07_2nd_1999Camry.dat'
-    filename = 'Data/CompTest_2016-01-07_2nd_Low3_1999Camry.dat'
+    # filename = 'Data/CompTest_2017-01-07_2nd_1999Camry.dat'
+    filename = 'Data/CompTest_2017-01-07_2nd_Low3_1999Camry.dat'
         #includes low value for first stroke pressure
     key = 2
     tmpdf = main(filename, key, ylimit, )
@@ -292,7 +292,7 @@ if __name__ == "__main__":
     ####################################################################
     #THIRD TEST
         #Cammy mk3, 2/11/2017, after Seafoam treatment
-    filename = 'Data/CompTest_2016-02-11_1st_1999Camry.dat'
+    filename = 'Data/CompTest_2017-02-11_1st_1999Camry.dat'
     key = 3
     tmpdf = main(filename, key, ylimit, )
     #Save Data
@@ -302,7 +302,7 @@ if __name__ == "__main__":
     ####################################################################
     #COROLLA TEST
         #Grant's corrolla, 2/12/2017
-    filename = 'Data/CompTest_2016-02-12_1st_1996Corolla.dat'
+    filename = 'Data/CompTest_2017-02-12_1st_1996Corolla.dat'
     key = 'rolla'
     tmpdf = main(filename, key, ylimit, )
     #Save Data
